@@ -213,24 +213,29 @@ func (s *Server) getProxyHashFromTarget(input string) string {
 }
 
 func (s *Server) getServiceFQDN(drProxy *DynamicReverseProxy, hash string) (fqdn string, err error) {
-	fqdn = fmt.Sprintf("%v.%v.%v", hash, drProxy.JobId, "svc")
+	fqdn = fmt.Sprintf("%v-%v-%v", hash, drProxy.JobId, "svc")
 	s.Infof("Generating fqdn prefix: v", fqdn)
 	return
 }
 
 func (s *Server) getProxyIDFromFQDN(fqdn string) (string, error) {
-	parts := strings.Split(fqdn, ".")
+    parts := strings.Split(fqdn, ".")
 
-	// Check if we have at least 3 parts (e.g., "svc.test.ik.crave.io")
-	if len(parts) < 3 {
-		return "", fmt.Errorf("%v: invalid FQDN format: not enough parts, expected '*.svc.<domain>", fqdn)
-	}
+    // Check if we have at least 3 parts (e.g., "x-y-svc.ik.crave.io")
+    if len(parts) < 3 {
+        return "", fmt.Errorf("%v: invalid FQDN format: not enough parts, expected '*-svc.<domain>'", fqdn)
+    }
 
-	// If 3rd part is "svc", return the first part
-	if parts[2] == "svc" {
-		return parts[0], nil
-	}
-	return "", fmt.Errorf("%v: invalid FQDN format: not enough parts, expected '*.svc.<domain>", fqdn)
+    // Check if the first part ends with "-svc"
+    firstPart := parts[0]
+    if strings.HasSuffix(firstPart, "-svc") {
+        // Remove the "-svc" suffix and split by the first hyphen
+        base := strings.TrimSuffix(firstPart, "-svc")
+        subParts := strings.Split(base, "-")
+        return subParts[0], nil
+    }
+
+    return "", fmt.Errorf("%v: invalid FQDN format: expected '*-svc.<domain>'", fqdn)
 }
 
 // createDynamicProxy is the main http websocket handler for the chisel server
