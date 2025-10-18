@@ -6,6 +6,11 @@ DIR=${DIRBASE}/${VERSION}/${BUILD}/bin
 # What GOARCH should we use?
 GOARCH?=amd64
 
+LINUX_GOLANG_ENV=env CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
+ifeq (${GOARCH}, ppc64le)
+	LINUX_GOLANG_ENV=env CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH} CC=powerpc64le-linux-gnu-gcc
+endif
+
 LDFLAGS=-ldflags "-s -w ${XBUILD} -buildid=${BUILD} -X github.com/jpillora/chisel/share.BuildVersion=${VERSION}"
 
 GOFILES=`go list ./...`
@@ -21,7 +26,9 @@ freebsd: lint
 	env CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/chisel-freebsd_amd64 .
 
 linux: lint
-	env CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH} go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/chisel-linux_${GOARCH} .
+	sudo apt-get update ; sudo apt-get install -y gcc-powerpc64le-linux-gnu
+	${LINUX_GOLANG_ENV} \
+		go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/chisel-linux_${GOARCH} .
 
 windows: lint
 	env CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/chisel-windows_amd64 .
