@@ -26,7 +26,6 @@ freebsd: lint
 	env CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/chisel-freebsd_amd64 .
 
 linux: lint
-	sudo apt-get update ; sudo apt-get install -y gcc-powerpc64le-linux-gnu
 	${LINUX_GOLANG_ENV} \
 		go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/chisel-linux_${GOARCH} .
 
